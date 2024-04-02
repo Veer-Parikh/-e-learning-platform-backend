@@ -60,7 +60,7 @@ async function myProfile(req,res) {
   try {
     const user = await prisma.user.findFirst({ 
       where:{
-        _id:req.user.id
+        id:req.user.id
     }});
     res.send(user)
   } catch(err) {
@@ -84,12 +84,49 @@ async function allUsers(req,res) {
 }
 
 async function user(req,res) {
-  const {username} = req.params.username
+  const {username} = req.params;
   try{
     const user = await prisma.user.findFirst({ where: {username:username}})
     res.send(user);
   } catch(err){
     res.send(err)
+  }
+}
+
+async function update(req,res) {
+  const input = req.body
+  const id = req.user.id
+  try{
+    const data = {};
+    if (input.username) data.username = input.username;
+    if (input.firstName) data.firstName = input.firstName;
+    if (input.lastName) data.lastName = input.lastName;
+    if (input.email) data.email = input.email;
+    if (input.bio) data.bio = input.bio;
+
+    const user = await prisma.user.update({
+      where:{
+        id:id
+      },
+      data:data
+    })
+    return res.status(200).send(user)
+  } catch (err){
+    return res.status(400).send(err)
+  }
+}
+
+async function deleteUser(req,res) {
+  try{
+    const user = await prisma.user.delete({
+      where:{
+        id: req.user.id
+      }
+    })
+    if(!user) return res.send("user does not exist")
+    if(user) return res.send("user deleted successfully")
+  } catch(err) {
+    res.status(400).send(err)
   }
 }
         
@@ -99,18 +136,24 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-const profilepic= async(req,res)=>{
+async function profilepic (req, res) {
   try {
-      const result = await cloudinary.uploader.upload(req.file.path);
-      const profilePicUrl = result.secure_url;
+    const result = await cloudinary.uploader.upload(req.file.path);
+    const profilePicUrl = result.secure_url;
 
-      const user = await user.findById(req.user._id);
-      user.profilePicUrl = profilePicUrl;
-      await user.save();
-      return res.send("Profile picture uploaded and saved.");
+    const user = await prisma.user.update({
+      where: {
+        id: req.user.id
+      },
+      data: {
+        pfp : profilePicUrl
+      }
+    });
+    return res.send("Profile picture uploaded and saved.");
   } catch (error) {
-      return res.status(500).send(error);
+    console.error("Error uploading profile picture:", error);
+    return res.status(500).send(error);
   }
 }
 
-module.exports = { createUser,loginUser,myProfile,allUsers,user,profilepic };
+module.exports = { createUser,loginUser,myProfile,allUsers,user,update,deleteUser,profilepic };
