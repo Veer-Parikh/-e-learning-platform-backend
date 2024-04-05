@@ -43,18 +43,16 @@ model Creator {
 }
 
 model Course {
-  courseId     String       @id @default(uuid())
-  title        String
-  description  String
-  category     String
-  level        String
-  fees         Int
-  rating       Int
-  creator      Creator      @relation(fields: [creatorId], references: [id])
-  superAdminId String
-  creatorId    String
-  createdAt    DateTime     @default(now())
-  Enrollment   Enrollment[]
+  courseId    String       @id @default(uuid())
+  title       String
+  description String
+  category    String
+  level       String
+  fees        Int
+  creator     Creator      @relation(fields: [creatorId], references: [id])
+  creatorId   String
+  createdAt   DateTime     @default(now())
+  Enrollment  Enrollment[]
 }
 
 model Enrollment {

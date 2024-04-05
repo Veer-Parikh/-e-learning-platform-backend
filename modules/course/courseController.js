@@ -10,7 +10,7 @@ async function createCourse(req,res) {
                 description,  
                 category,  
                 level,  
-                fees,     
+                fees,
                 creatorId
             },
         })
@@ -18,7 +18,7 @@ async function createCourse(req,res) {
             console.log("cousrse saved successfully")
         })
         .catch((err) => {
-            console.log("error in saving the user")
+            console.log("error in saving the user",err)
         })
         res.json(course)
     } catch(e) {
@@ -71,7 +71,8 @@ async function getCourses1(req,res) {
                 description:true,
                 level:true,
                 fees:true,
-                category:true
+                category:true,
+                courseId:true
             }
         })
         return res.status(200).send(courses);

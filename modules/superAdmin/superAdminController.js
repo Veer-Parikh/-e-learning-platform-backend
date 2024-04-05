@@ -77,7 +77,8 @@ async function allCreators(req,res) {
       select:{
         username:true ,
         firstName:true,
-        bio:true
+        bio:true,
+        id:true
       }
     })
     return res.status(200).send(creators);

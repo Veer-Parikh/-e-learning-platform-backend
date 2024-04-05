@@ -2,10 +2,10 @@ const prisma = require("../../prisma")
 
 async function createEnrollment(req, res) {
     try {
-        const { courseCourseId } = req.params;
         const userId = req.user.id;
+        const courseCourseId = req.params.courseCourseId
 
-        const existingEnrollment = await prisma.enrollment.findUnique({
+        const existingEnrollment = await prisma.enrollment.findFirst({
             where: {
                 courseCourseId,
                 userId
@@ -15,6 +15,7 @@ async function createEnrollment(req, res) {
         if (existingEnrollment) {
             return res.status(400).send("User is already enrolled in this course");
         }
+
         const enrollment = await prisma.enrollment.create({
             data: {
                 courseCourseId,
@@ -25,27 +26,31 @@ async function createEnrollment(req, res) {
         console.log("Enrolled successfully");
         return res.status(200).send(enrollment);
     } catch (error) {
-        console.error("Error creating enrollment");
+        console.error("Error creating enrollment", error);
         return res.status(400).send("Could not create enrollment");
     }
 }
+
+
 
 async function deleteEnrollment(req,res) {
     try{
         const enrollment = await prisma.enrollment.delete({
           where:{
-            userId:req.user.id 
+            userId:req.user.id,
+            enrollmentId:req.body.enrollmentId
           }
         })
         if(!enrollment) return res.send("enrollment does not exist")
         if(enrollment) return res.send("enrollment deleted successfully")
     } catch(err) {
         res.status(400).send(err)
+        console.log(err)
     }
 }
 
 async function userEnrollments(req, res) {
-    const { userId } = req.user.id;
+    const userId  = req.user.id;
     try {
         const enrollments = await prisma.enrollment.findMany({
             where: {
@@ -53,6 +58,7 @@ async function userEnrollments(req, res) {
             },
             select: {
                 courseCourseId:true,
+                userId:true,
                 createdAt:true
             }
         });
