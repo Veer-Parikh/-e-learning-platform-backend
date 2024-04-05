@@ -25,6 +25,6 @@
     "uuid": "^9.0.1"
   },
   "devDependencies": {
-    "prisma": "^5.11.0"
+    "prisma": "^5.12.1"
   }
 }

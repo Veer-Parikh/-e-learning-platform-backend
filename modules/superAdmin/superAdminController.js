@@ -5,11 +5,11 @@ const {sendReg,sendLogin} = require('../../utils/resend');
 const cloudinary = require('cloudinary').v2
 const jwt = require('jsonwebtoken')
 
-async function createUser(req, res) {
+async function createCreator(req, res) {
   try {
     const {username,firstName,lastName,email,password,bio} = req.body;
     const hashedPassword = await bcrypt.hash(password, 10);
-    const user = await prisma.user.create({
+    const creator = await prisma.creator.create({
       data: {
         username ,
         firstName ,
@@ -19,36 +19,36 @@ async function createUser(req, res) {
         bio 
       },
     })
-    .then((user)=>{
+    .then(()=>{
       console.log("user saved successfully")
       sendReg(email);
     })
     .catch((err)=>{
-      console.log("err in saving the user",err)
+      console.log("err in saving the creator",err)
     });
-    res.status(200).json(user);
+    res.status(200).json(creator);
   } catch (error) {
     console.error(error);
     res.send(error);
   }
 }
 
-async function loginUser(req, res) {
+async function loginCreator(req, res) {
   try {
     const { username, password } = req.body;
-    const existingUser = await prisma.user.findFirst({ where: { username: username } });
+    const existingCreator = await prisma.creator.findFirst({ where: { username: username } });
 
-    if (existingUser) {
-      const validPass = await bcrypt.compare(password, existingUser.password);
+    if (existingCreator) {
+      const validPass = await bcrypt.compare(password, existingCreator.password);
       if (validPass) {
-        const token = jwt.sign({ _id: existingUser.id }, process.env.Access_Token); //, { expiresIn: '3h' }
+        const token = jwt.sign({ _id: existingCreator.id }, process.env.Access_Token); //, { expiresIn: '3h' }
         res.json(token);
-        //sendLogin();
+        sendLogin();
       } else {
         res.status(400).send('Invalid password');
       }
     } else {
-      res.status(400).send('User not found');
+      res.status(400).send('creator not found');
     }
   } catch (err) {
     console.error("Error logging in",err);
@@ -56,41 +56,42 @@ async function loginUser(req, res) {
   }
 }
 
-//get the users profile
-async function myProfile(req,res) {
+//get the creators profile
+async function myCreatorProfile(req,res) {
   try {
-    const user = await prisma.user.findFirst({ 
+    const creator = await prisma.creator.findFirst({ 
       where:{
         id:req.user.id
     }});
-    res.send(user)
+    res.send(creator)
   } catch(err) {
     res.status(400).send(err)
     console.log(err)
   }
 }
 
-//you can get alll the users profiles and this is kept without authentication so that all can see users but to open the specific user you need to login
-async function allUsers(req,res) {
+//you can get alll the creators profiles and this is kept without authentication so that all can see users but to open the specific creator you need to login
+async function allCreators(req,res) {
   try{
-    const users = await prisma.user.findMany({
+    const creators = await prisma.creator.findMany({
       select:{
         username:true ,
         firstName:true,
         bio:true
-    }})
-    return res.status(200).send(users);
+      }
+    })
+    return res.status(200).send(creators);
   } catch(err) {
-    return res.status(400).send("no users found")
+    return res.status(400).send("no creators found")
   }
 }
 
-//endpoint to view specified user profile
-async function user(req,res) {
+//endpoint to view specified creator profile
+async function creator(req,res) {
   const {id} = req.params;
   try{
-    const user = await prisma.user.findFirst({ where: {id:id}})
-    res.send(user);
+    const creator = await prisma.creator.findFirst({ where: {id:id}})
+    res.send(creator);
   } catch(err){
     res.send(err)
   }
@@ -107,27 +108,27 @@ async function update(req,res) {
     if (input.email) data.email = input.email;
     if (input.bio) data.bio = input.bio;
 
-    const user = await prisma.user.update({
+    const creator = await prisma.creator.update({
       where:{
         id:id
       },
       data:data
     })
-    return res.status(200).send(user)
+    return res.status(200).send(creator)
   } catch (err){
     return res.status(400).send(err)
   }
 }
 
-async function deleteUser(req,res) {
+async function deleteCreator(req,res) {
   try{
-    const user = await prisma.user.delete({
+    const creator = await prisma.creator.delete({
       where:{
         id: req.user.id
       }
     })
-    if(!user) return res.send("user does not exist")
-    if(user) return res.send("user deleted successfully")
+    if(!creator) return res.send("user does not exist")
+    if(creator) return res.send("user deleted successfully")
   } catch(err) {
     res.status(400).send(err)
   }
@@ -144,7 +145,7 @@ async function profilepic (req, res) {
     const result = await cloudinary.uploader.upload(req.file.path);
     const profilePicUrl = result.secure_url;
 
-    const user = await prisma.user.update({
+    const user = await prisma.creator.update({
       where: {
         id: req.user.id
       },
@@ -193,4 +194,4 @@ const pagination = (model) => {
   };
 };
 
-module.exports = { createUser,loginUser,myProfile,allUsers,user,update,deleteUser,profilepic };
+module.exports = { createCreator,loginCreator,myCreatorProfile,allCreators,creator,update,deleteCreator,profilepic };

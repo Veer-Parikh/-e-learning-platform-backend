@@ -30,3 +30,12 @@ app.listen(port, () => {
 
 const userRoutes = require('./modules/user/userRoute')
 app.use('/user',userRoutes)
+
+const superAdminRoutes = require('./modules/superAdmin/superAdminRoute')
+app.use('/creator',superAdminRoutes)
+
+const coursesRoutes = require('./modules/course/courseRoute')
+app.use('/course',coursesRoutes)
+
+const enrollmentRoutes = require('./modules/enrollment/enrollmentRoute')
+app.use('/enroll',enrollmentRoutes)
