@@ -3,6 +3,7 @@ const { PrismaClient } = require('@prisma/client');
 const dotenv = require('dotenv');
 const cors = require('cors')
 const bodyParser = require('body-parser')
+const logger = require("./utils/logger")
 
 dotenv.config();
 
@@ -25,7 +26,7 @@ app.use(bodyParser.json());
 // });
 
 app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
+  logger.info(`Server is running on port ${port}`);
 });
 
 const userRoutes = require('./modules/user/userRoute')

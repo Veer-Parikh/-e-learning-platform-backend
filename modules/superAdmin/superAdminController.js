@@ -3,7 +3,8 @@ const bcrypt = require('bcrypt');
 const prisma = require('../../prisma');
 const {sendReg,sendLogin} = require('../../utils/resend');
 const cloudinary = require('cloudinary').v2
-const jwt = require('jsonwebtoken')
+const jwt = require('jsonwebtoken');
+const logger = require('../../utils/logger');
 
 async function createCreator(req, res) {
   try {
@@ -20,15 +21,15 @@ async function createCreator(req, res) {
       },
     })
     .then(()=>{
-      console.log("user saved successfully")
+      logger.info("user saved successfully")
       sendReg(email);
     })
     .catch((err)=>{
-      console.log("err in saving the creator",err)
+      logger.error("err in saving the creator",err)
     });
     res.status(200).json(creator);
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     res.send(error);
   }
 }
@@ -45,13 +46,15 @@ async function loginCreator(req, res) {
         res.json(token);
         sendLogin();
       } else {
+        logger.fatal("invalid password")
         res.status(400).send('Invalid password');
       }
     } else {
+      logger.error("creator not found")
       res.status(400).send('creator not found');
     }
   } catch (err) {
-    console.error("Error logging in",err);
+    logger.error("Error logging in",err);
     res.status(500).send('An error occurred while logging in');
   }
 }
@@ -63,10 +66,11 @@ async function myCreatorProfile(req,res) {
       where:{
         id:req.user.id
     }});
+    logger.info("creator profile found successfully")
     res.send(creator)
   } catch(err) {
     res.status(400).send(err)
-    console.log(err)
+    logger.error(err)
   }
 }
 
@@ -81,8 +85,10 @@ async function allCreators(req,res) {
         id:true
       }
     })
+    logger.info("creators profile found successfully")
     return res.status(200).send(creators);
   } catch(err) {
+    logger.error(err)
     return res.status(400).send("no creators found")
   }
 }
@@ -92,9 +98,11 @@ async function creator(req,res) {
   const {id} = req.params;
   try{
     const creator = await prisma.creator.findFirst({ where: {id:id}})
-    res.send(creator);
+    logger.info("creator found")
+    return res.status(200).send(creator);
   } catch(err){
-    res.send(err)
+    logger.error(err)
+    return res.status(400).send(err)
   }
 }
 
@@ -115,8 +123,10 @@ async function update(req,res) {
       },
       data:data
     })
+    logger.info("creator updated successfully")
     return res.status(200).send(creator)
   } catch (err){
+    logger.error("error updating course",err)
     return res.status(400).send(err)
   }
 }
@@ -128,9 +138,16 @@ async function deleteCreator(req,res) {
         id: req.user.id
       }
     })
-    if(!creator) return res.send("user does not exist")
-    if(creator) return res.send("user deleted successfully")
+    if(!creator) {
+      logger.error("user doesnt exist")
+      return res.send("user does not exist")
+    }
+    if(creator){
+      logger.info("user deletedd succesfully")
+      return res.send("user deleted successfully")
+    }
   } catch(err) {
+    logger.error(err)
     res.status(400).send(err)
   }
 }
@@ -154,10 +171,11 @@ async function profilepic (req, res) {
         pfp : profilePicUrl
       }
     });
+    logger.info("picture uploaded")
     return res.send("Profile picture uploaded and saved.");
   } catch (error) {
-    console.error("Error uploading profile picture:", error);
-    return res.status(500).send(error);
+    logger.error("Error uploading profile picture:", error);
+    return res.status(400).send(error);
   }
 }
 
@@ -189,7 +207,7 @@ const pagination = (model) => {
           res.pagination = result;
           next();
       } catch (e) {
-          console.log(e);
+          logger.error(e);
           res.status(500).send(e);
       }
   };

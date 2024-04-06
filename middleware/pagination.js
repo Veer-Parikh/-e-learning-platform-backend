@@ -1,3 +1,5 @@
+const logger = require("../utils/logger")
+
 const pagination = (model) =>{
     return async (req,res,next) => {
         const page = parseInt(req.query.page)
@@ -26,7 +28,7 @@ const pagination = (model) =>{
             req.pagination = result
             next()
         } catch(e) {
-            console.log(e)
+            logger.error(e)
         }
     }
 }

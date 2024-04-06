@@ -1,5 +1,6 @@
 require('dotenv').config()
-const {Resend} = require('resend')
+const {Resend} = require('resend');
+const logger = require('./logger');
 
 const resend = new Resend(process.env.RESEND_URL);
 const sendReg = async (mail) => {
@@ -11,13 +12,12 @@ const sendReg = async (mail) => {
             html: "<strong>registration successful!</strong>",
         });
         if (error) {
-            console.error('Error sending registration email:', error);
-            throw new Error('Failed to send registration email.');
+            logger.error('Error sending registration email:', error);
         }
 
-        console.log('Registration email sent successfully:', data);
+        logger.info('Registration email sent successfully:', data);
     } catch (error) {
-        throw new Error('Failed to send registration email.');
+        throw logger.error('Failed to send registration email.');
     }
 };
 
@@ -30,13 +30,12 @@ const sendLogin = async (mail) => {
             html: "<strong>login successful!</strong>",
         });
         if (error) {
-            console.error('Error sending login email:', error);
-            throw new Error('Failed to send login email.');
+            logger.error('Error sending login email:', error);
         }
 
-        console.log('login email sent successfully:', data);
+        logger.info('login email sent successfully:', data);
     } catch (error) {
-        throw new Error('Failed to send login email.');
+        logger.error('Failed to send login email.');
     }
 };
 
