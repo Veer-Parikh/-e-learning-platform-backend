@@ -75,23 +75,18 @@ async function myCreatorProfile(req,res) {
 }
 
 //you can get alll the creators profiles and this is kept without authentication so that all can see users but to open the specific creator you need to login
-async function allCreators(req,res) {
-  try{
-    const creators = await prisma.creator.findMany({
-      select:{
-        username:true ,
-        firstName:true,
-        bio:true,
-        id:true
-      }
-    })
-    logger.info("creators profile found successfully")
-    return res.status(200).send(creators);
-  } catch(err) {
-    logger.error(err)
-    return res.status(400).send("no creators found")
+async function allCreators(req, res) {
+  try {
+    const { pagination } = req;
+    const creators = pagination.result;
+    logger.info("Creators profile found successfully");
+    return res.status(200).json(creators);
+  } catch (err) {
+    logger.error(err);
+    return res.status(500).send("Internal Server Error");
   }
 }
+
 
 //endpoint to view specified creator profile
 async function creator(req,res) {
@@ -179,38 +174,49 @@ async function profilepic (req, res) {
   }
 }
 
-const pagination = (model) => {
-  return async (req, res, next) => {
-      const page = parseInt(req.query.page) || 1;
-      const limit = parseInt(req.query.limit) || 10;
+const pagination = (model) =>{
+  return async (req,res,next) => {
+      const page = parseInt(req.query.page) || 1; // Default page is 1
+      const limit = parseInt(req.query.limit) || 3; // Default limit is 3 because i have less users rn
 
       const startIndex = (page - 1) * limit;
       const endIndex = page * limit;
 
       const result = {};
 
-      if (endIndex < (await prisma.model.countDocuments().exec())) {
+      if (endIndex < model.length) {
           result.next = {
               page: page + 1,
               limit: limit
-          };
+          }
       }
+
       if (startIndex > 0) {
           result.previous = {
               page: page - 1,
               limit: limit
-          };
+          }
       }
 
       try {
-          result.result = await prisma.model.find().limit(limit).skip(startIndex).exec();
-          res.pagination = result;
+          result.result = await model.findMany({
+            select:{
+              username:true,
+              email:true,
+              bio:true,
+              pfp:true,
+              id:true
+            },
+            skip: startIndex,
+            take: limit
+          });
+          req.pagination = result;
           next();
-      } catch (e) {
+      } catch(e) {
           logger.error(e);
-          res.status(500).send(e);
+          return res.status(500).send("Internal Server Error");
       }
-  };
-};
+  }
+}
 
-module.exports = { createCreator,loginCreator,myCreatorProfile,allCreators,creator,update,deleteCreator,profilepic };
+module.exports = { createCreator,loginCreator,myCreatorProfile,allCreators,creator,update,deleteCreator,profilepic,pagination };

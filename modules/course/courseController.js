@@ -61,43 +61,120 @@ async function deleteCourse(req, res) {
     }
 }
 
-  async function getCourses1(req, res) {
+async function getCourses1(req, res) {
     try {
-        const courses = await prisma.course.findMany({
-            select: {
-                title: true,
-                description: true,
-                level: true,
-                fees: true,
-                category: true,
-                courseId: true
-            }
-        });
+        const { pagination1 } = req;
+        const courses = pagination1.result;
         logger.info("Courses fetched successfully");
-        return res.status(200).send(courses);
+        return res.status(200).json(courses);
     } catch (error) {
         logger.error("Error fetching courses:", error);
-        return res.status(400).send("No courses found");
+        return res.status(500).send("Internal Server Error");
     }
 }
 
+const pagination1 = (model) => {
+    return async (req, res, next) => {
+        const page = parseInt(req.query.page) || 1; // Default page is 1
+        const limit = parseInt(req.query.limit) || 3; // Default limit is 3
+
+        const startIndex = (page - 1) * limit;
+        const endIndex = page * limit;
+
+        const result = {};
+
+        if (endIndex < model.length) {
+            result.next = {
+                page: page + 1,
+                limit: limit
+            };
+        }
+
+        if (startIndex > 0) {
+            result.previous = {
+                page: page - 1,
+                limit: limit
+            };
+        }
+
+        try {
+            result.result = await model.findMany({
+                select: {
+                    title: true,
+                    description: true,
+                    level: true,
+                    fees: true,
+                    category: true,
+                    courseId: true
+                },
+                skip: startIndex,
+                take: limit
+            });
+            req.pagination1 = result;
+            next();
+        } catch (e) {
+            logger.error(e);
+            return res.status(500).send("Internal Server Error");
+        }
+    };
+};
+
 async function getCourses2(req, res) {
     try {
-        const courses = await prisma.course.findMany({
-            select: {
-                title: true,
-                description: true,
-                level: true,
-                category: true
-            }
-        });
+        const { pagination2 } = req;
+        const courses = pagination2.result;
         logger.info("Courses fetched successfully");
-        return res.status(200).send(courses);
+        return res.status(200).json(courses);
     } catch (error) {
         logger.error("Error fetching courses:", error);
-        return res.status(400).send("No courses found");
+        return res.status(500).send("Internal Server Error");
     }
 }
+
+
+const pagination2 = (model) => {
+    return async (req, res, next) => {
+        const page = parseInt(req.query.page) || 1; // Default page is 1
+        const limit = parseInt(req.query.limit) || 3; // Default limit is 3
+
+        const startIndex = (page - 1) * limit;
+        const endIndex = page * limit;
+
+        const result = {};
+
+        if (endIndex < model.length) {
+            result.next = {
+                page: page + 1,
+                limit: limit
+            };
+        }
+
+        if (startIndex > 0) {
+            result.previous = {
+                page: page - 1,
+                limit: limit
+            };
+        }
+
+        try {
+            result.result = await model.findMany({
+                select: {
+                    title: true,
+                    description: true,
+                    level: true,
+                    category: true
+                },
+                skip: startIndex,
+                take: limit
+            });
+            req.pagination2 = result;
+            next();
+        } catch (e) {
+            logger.error(e);
+            return res.status(500).send("Internal Server Error");
+        }
+    };
+};
 
 async function courseCategory(req, res) {
     const { category } = req.query;
@@ -193,4 +270,4 @@ async function courseFees(req, res) {
         return res.status(400).send("No courses found for the specified fees");
     }
 }
-module.exports = {createCourse,updateCourse,deleteCourse,getCourses1,getCourses2,courseCategory,courseCategoryLevel,courseFees,courseLevel}
+module.exports = {createCourse,updateCourse,deleteCourse,getCourses1,pagination1,getCourses2,pagination2,courseCategory,courseCategoryLevel,courseFees,courseLevel}
